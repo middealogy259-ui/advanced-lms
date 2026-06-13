@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced LMS Project</title>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial,sans-serif;
+}
+
+body{
+  background:#f4f6f9;
+  padding:20px;
+}
+
+.container{
+  max-width:1200px;
+  margin:auto;
+}
+
+.card{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,0.1);
+  margin-bottom:20px;
+}
+
+h1,h2{
+  margin-bottom:15px;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  margin:10px 0;
+  border:1px solid #ccc;
+  border-radius:5px;
+}
+
+button{
+  padding:12px 20px;
+  border:none;
+  background:#007bff;
+  color:white;
+  border-radius:5px;
+  cursor:pointer;
+  margin-top:10px;
+  margin-right:10px;
+}
+
+button:hover{
+  background:#0056b3;
+}
+
+.course-container{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+  margin-top:20px;
+}
+
+.course-card{
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+.progress-bar{
+  width:100%;
+  background:#ddd;
+  border-radius:20px;
+  overflow:hidden;
+  margin-top:10px;
+}
+
+.progress-fill{
+  height:30px;
+  width:0%;
+  background:green;
+  color:white;
+  text-align:center;
+  line-height:30px;
+  transition:0.5s;
+}
+
+video{
+  width:100%;
+  margin-top:10px;
+  border-radius:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- AUTH -->
+
+  <div class="card">
+
+    <h1>Learning Management System</h1>
+
+    <input type="email" id="email" placeholder="Enter Email">
+
+    <input type="password" id="password" placeholder="Enter Password">
+
+    <button onclick="registerUser()">Register</button>
+
+    <button onclick="loginUser()">Login</button>
+
+    <button onclick="logoutUser()">Logout</button>
+
+  </div>
+
+
+  <!-- ADD COURSE -->
+
+  <div class="card">
+
+    <h2>Add Course</h2>
+
+    <input type="text" id="courseTitle" placeholder="Course Title">
+
+    <input type="text" id="instructor" placeholder="Instructor Name">
+
+    <input type="text" id="duration" placeholder="Course Duration">
+
+    <button onclick="addCourse()">Add Course</button>
+
+  </div>
+
+
+  <!-- VIDEO -->
+
+  <div class="card">
+
+    <h2>Upload Course Video</h2>
+
+    <input type="file" id="videoFile" accept="video/*">
+
+    <button onclick="uploadVideo()">Upload Video</button>
+
+    <video controls id="videoPreview"></video>
+
+  </div>
+
+
+  <!-- ASSIGNMENT -->
+
+  <div class="card">
+
+    <h2>Assignments</h2>
+
+    <input type="text" id="studentName" placeholder="Student Name">
+
+    <input type="text" id="assignmentTitle" placeholder="Assignment Title">
+
+    <button onclick="saveAssignment()">Submit Assignment</button>
+
+  </div>
+
+
+  <!-- PROGRESS -->
+
+  <div class="card">
+
+    <h2>Save Student Progress</h2>
+
+    <input type="text" id="progressStudent" placeholder="Student Name">
+
+    <input type="text" id="progressCourse" placeholder="Course Name">
+
+    <input type="number" id="progressValue" placeholder="Completion Percentage">
+
+    <button onclick="saveProgress()">Save Progress</button>
+
+    <div class="progress-bar">
+
+      <div class="progress-fill" id="progressFill">0%</div>
+
+    </div>
+
+  </div>
+
+
+  <!-- COURSES -->
+
+  <div class="card">
+
+    <h2>Available Courses</h2>
+
+    <button onclick="fetchCourses()">Load Courses</button>
+
+    <div class="course-container" id="courseContainer"></div>
+
+  </div>
+
+</div>
+
+
+<!-- FIREBASE -->
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+
+
+<script>
+
+/* =========================================
+   FIREBASE CONFIG
+========================================= */
+
+const firebaseConfig = {
+    
+    apiKey: "AIzaSyCJLViRBv-zTIG1BP2Mx_9prRr6H2Hxn9E",
+
+    authDomain: "advanced-lms-75a8a.firebaseapp.com",
+
+    projectId: "advanced-lms-75a8a",
+
+    storageBucket: "advanced-lms-75a8a.firebasestorage.app",
+
+    messagingSenderId: "92425840874",
+
+    appId: "1:92425840874:web:5cebf5765e9310b36d0f93"
+  };
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+
+const db = firebase.firestore();
+
+const storage = firebase.storage();
+
+
+/* =========================================
+   REGISTER USER
+========================================= */
+
+async function registerUser(){
+
+  try{
+
+    let email = document.getElementById("email").value.trim();
+
+    let password = document.getElementById("password").value.trim();
+
+    if(email === "" || password === ""){
+
+      alert("Please fill all fields");
+      return;
+
+    }
+
+    await auth.createUserWithEmailAndPassword(email,password);
+
+    alert("Registration Successful");
+
+  }
+
+  catch(error){
+
+    alert(error.message);
+
+  }
+
+}
+
+
+/* =========================================
+   LOGIN USER
+========================================= */
+
+async function loginUser(){
+
+  try{
+
+    let email = document.getElementById("email").value.trim();
+
+    let password = document.getElementById("password").value.trim();
+
+    await auth.signInWithEmailAndPassword(email,password);
+
+    alert("Login Successful");
+
+  }
+
+  catch(error){
+
+    alert(error.message);
+
+  }
+
+}
+
+
+/* =========================================
+   LOGOUT USER
+========================================= */
+
+async function logoutUser(){
+
+  try{
+
+    await auth.signOut();
+
+    alert("Logged Out");
+
+  }
+
+  catch(error){
+
+    alert(error.message);
+
+  }
+
+}
+
+
+/* =========================================
+   ADD COURSE
+========================================= */
+
+async function addCourse(){
+
+  try{
+
+    let title = document.getElementById("courseTitle").value.trim();
+
+    let instructor = document.getElementById("instructor").value.trim();
+
+    let duration = document.getElementById("duration").value.trim();
+
+    if(title === "" || instructor === "" || duration === ""){
+
+      alert("Please fill all fields");
+      return;
+
+    }
+
+    await db.collection("courses").add({
+
+      title,
+      instructor,
+      duration,
+      createdAt:new Date()
+
+    });
+
+    alert("Course Added Successfully");
+
+    document.getElementById("courseTitle").value = "";
+    document.getElementById("instructor").value = "";
+    document.getElementById("duration").value = "";
+
+  }
+
+  catch(error){
+
+    alert(error.message);
+
+  }
+
+}
+
+
+/* =========================================
+   FETCH COURSES
+========================================= */
+
+async function fetchCourses(){
+
+  try{
+
+    const container = document.getElementById("courseContainer");
+
+    container.innerHTML = "";
+
+    const querySnapshot = await db.collection("courses").get();
+
+    if(querySnapshot.empty){
+
+      container.innerHTML = "<p>No Courses Available</p>";
+      return;
+
+    }
+
+    querySnapshot.forEach((doc)=>{
+
+      let course = doc.data();
+
+      container.innerHTML += `
+
+      <div class="course-card">
+
+        <h3>${course.title}</h3>
+
+        <p><b>Instructor:</b> ${course.instructor}</p>
+
+        <p><b>Duration:</b> ${course.duration}</p>
+
+      </div>
+
+      `;
+
+    });
+
+  }
+
+  catch(error){
+
+    alert(error.message);
+
+  }
+
+}
+
+
+/* =========================================
+   VIDEO UPLOAD
+========================================= */
+
+async function uploadVideo(){
+
+  try{
+
+    let file = document.getElementById("videoFile").files[0];
+
+    if(!file){
+
+      alert("Please select a video");
+      return;
+
+    }
+
+    const storageRef = storage.ref().child("videos/" + Date.now() + "_" + file.name);
+
+    const snapshot = await storageRef.put(file);
+
+    const url = await snapshot.ref.getDownloadURL();
+
+    document.getElementById("videoPreview").src = url;
+
+    alert("Video Uploaded Successfully");
+
+  }
+
+  catch(error){
+
+    alert(error.message);
+
+  }
+
+}
+
+
+/* =========================================
+   SAVE ASSIGNMENT
+========================================= */
+
+async function saveAssignment(){
+
+  try{
+
+    let studentName = document.getElementById("studentName").value.trim();
+
+    let assignmentTitle = document.getElementById("assignmentTitle").value.trim();
+
+    if(studentName === "" || assignmentTitle === ""){
+
+      alert("Please fill all fields");
+      return;
+
+    }
+
+    await db.collection("assignments").add({
+
+      student:studentName,
+
+      assignment:assignmentTitle,
+
+      submittedAt:new Date()
+
+    });
+
+    alert("Assignment Submitted Successfully");
+
+    document.getElementById("studentName").value = "";
+
+    document.getElementById("assignmentTitle").value = "";
+
+  }
+
+  catch(error){
+
+    alert(error.message);
+
+  }
+
+}
+
+
+/* =========================================
+   SAVE PROGRESS
+========================================= */
+
+async function saveProgress(){
+
+  try{
+
+    let student = document.getElementById("progressStudent").value.trim();
+
+    let course = document.getElementById("progressCourse").value.trim();
+
+    let completed = parseInt(document.getElementById("progressValue").value);
+
+    if(student === "" || course === "" || isNaN(completed)){
+
+      alert("Please fill all fields");
+      return;
+
+    }
+
+    if(completed < 0 || completed > 100){
+
+      alert("Progress must be between 0 and 100");
+      return;
+
+    }
+
+    await db.collection("progress").add({
+
+      student,
+
+      course,
+
+      completed,
+
+      updatedAt:new Date()
+
+    });
+
+    let progressFill = document.getElementById("progressFill");
+
+    progressFill.style.width = completed + "%";
+
+    progressFill.innerHTML = completed + "%";
+
+    alert("Progress Saved");
+
+  }
+
+  catch(error){
+
+    alert(error.message);
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>
