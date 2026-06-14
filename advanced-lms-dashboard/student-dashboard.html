@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Dashboard</title>
+
+<style>
+body{
+    font-family:Segoe UI,sans-serif;
+    background:#f5f7fb;
+    padding:20px;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    margin-bottom:20px;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+
+.course-card{
+    background:#fff;
+    padding:15px;
+    border-radius:10px;
+    margin-top:10px;
+    border-left:5px solid #2563eb;
+}
+
+button{
+    background:#dc2626;
+    color:white;
+    border:none;
+    padding:10px 15px;
+    border-radius:8px;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+    <h1>🎓 Student Dashboard</h1>
+    <p>View your courses and learning progress.</p>
+</div>
+
+<div class="card">
+    <h2>Available Courses</h2>
+    <div id="courseContainer"></div>
+</div>
+
+<div class="card">
+    <button onclick="logout()">Logout</button>
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDG5Xj9NjKaOSPhrUx3b5NJEEHcAOWNybQ",
+  authDomain: "basic-lms-3c0e2.firebaseapp.com",
+  projectId: "basic-lms-3c0e2",
+  storageBucket: "basic-lms-3c0e2.firebasestorage.app",
+  messagingSenderId: "1052228849895",
+  appId: "1:1052228849895:web:b0e57660ca0a3609cdd242"
+};
+
+if(!firebase.apps.length){
+    firebase.initializeApp(firebaseConfig);
+}
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+async function loadCourses(){
+
+    const container =
+    document.getElementById("courseContainer");
+
+    container.innerHTML = "";
+
+    const snapshot =
+    await db.collection("courses").get();
+
+    snapshot.forEach(doc=>{
+
+        const course = doc.data();
+
+        container.innerHTML += `
+        <div class="course-card">
+            <h3>${course.title}</h3>
+            <p><b>Instructor:</b> ${course.instructor}</p>
+            <p><b>Duration:</b> ${course.duration}</p>
+        </div>
+        `;
+    });
+}
+
+function logout(){
+    auth.signOut();
+    window.location.href="index.html";
+}
+
+loadCourses();
+
+</script>
+
+</body>
+</html>

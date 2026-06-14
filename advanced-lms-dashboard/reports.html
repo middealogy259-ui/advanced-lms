@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LMS Reports</title>
+
+<style>
+
+body{
+    font-family:Segoe UI,sans-serif;
+    background:#f5f7fb;
+    padding:30px;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+}
+
+h1{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+}
+
+.card{
+    background:white;
+    padding:25px;
+    border-radius:15px;
+    text-align:center;
+    box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+
+.card h2{
+    font-size:40px;
+    color:#2563eb;
+    margin-top:10px;
+}
+
+.card p{
+    font-size:18px;
+    color:#555;
+}
+
+.back-btn{
+    background:#2563eb;
+    color:white;
+    border:none;
+    padding:12px 20px;
+    border-radius:8px;
+    cursor:pointer;
+    margin-bottom:20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<button class="back-btn"
+onclick="window.location.href='admin-dashboard.html'">
+← Back To Dashboard
+</button>
+
+<h1>LMS Reports Dashboard</h1>
+
+<div class="stats">
+
+<div class="card">
+<p>Total Courses</p>
+<h2 id="courseCount">0</h2>
+</div>
+
+<div class="card">
+<p>Total Students</p>
+<h2 id="studentCount">0</h2>
+</div>
+
+<div class="card">
+<p>Total Assignments</p>
+<h2 id="assignmentCount">0</h2>
+</div>
+
+<div class="card">
+<p>Total Progress Records</p>
+<h2 id="progressCount">0</h2>
+</div>
+
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDG5Xj9NjKaOSPhrUx3b5NJEEHcAOWNybQ",
+  authDomain: "basic-lms-3c0e2.firebaseapp.com",
+  projectId: "basic-lms-3c0e2",
+  storageBucket: "basic-lms-3c0e2.firebasestorage.app",
+  messagingSenderId: "1052228849895",
+  appId: "1:1052228849895:web:b0e57660ca0a3609cdd242"
+};
+
+if(!firebase.apps.length){
+    firebase.initializeApp(firebaseConfig);
+}
+
+const db = firebase.firestore();
+
+async function loadReports(){
+
+    const courses = await db.collection("courses").get();
+    document.getElementById("courseCount").innerText =
+    courses.size;
+
+    const students = await db.collection("students").get();
+    document.getElementById("studentCount").innerText =
+    students.size;
+
+    const assignments = await db.collection("assignments").get();
+    document.getElementById("assignmentCount").innerText =
+    assignments.size;
+
+    const progress = await db.collection("progress").get();
+    document.getElementById("progressCount").innerText =
+    progress.size;
+}
+
+loadReports();
+
+</script>
+
+</body>
+</html>

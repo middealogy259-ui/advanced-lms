@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Students</title>
+
+<style>
+body{
+    font-family:Segoe UI,sans-serif;
+    background:#f5f7fb;
+    padding:30px;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:12px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+    margin-bottom:20px;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin:10px 0;
+    border:1px solid #ccc;
+    border-radius:8px;
+}
+
+button{
+    padding:10px 20px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    color:white;
+    margin-right:10px;
+}
+
+.add-btn{
+    background:#2563eb;
+}
+
+.edit-btn{
+    background:#f59e0b;
+}
+
+.delete-btn{
+    background:#dc2626;
+}
+
+.student-card{
+    background:white;
+    padding:15px;
+    border-radius:10px;
+    margin-top:15px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+<h1>Manage Students</h1>
+
+<input type="text" id="studentName" placeholder="Student Name">
+
+<input type="email" id="studentEmail" placeholder="Student Email">
+
+<input type="text" id="studentCourse" placeholder="Course Name">
+
+<button class="add-btn" onclick="addStudent()">
+Add Student
+</button>
+
+</div>
+
+<div class="card">
+<h2>Student List</h2>
+
+<div id="studentContainer"></div>
+
+</div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDG5Xj9NjKaOSPhrUx3b5NJEEHcAOWNybQ",
+  authDomain: "basic-lms-3c0e2.firebaseapp.com",
+  projectId: "basic-lms-3c0e2",
+  storageBucket: "basic-lms-3c0e2.firebasestorage.app",
+  messagingSenderId: "1052228849895",
+  appId: "1:1052228849895:web:b0e57660ca0a3609cdd242"
+};
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+
+const db = firebase.firestore();
+
+async function addStudent(){
+
+    const name = document.getElementById("studentName").value;
+    const email = document.getElementById("studentEmail").value;
+    const course = document.getElementById("studentCourse").value;
+
+    if(!name || !email || !course){
+        alert("Fill all fields");
+        return;
+    }
+
+    await db.collection("students").add({
+        name,
+        email,
+        course,
+        createdAt:new Date()
+    });
+
+    alert("Student Added");
+
+    document.getElementById("studentName").value="";
+    document.getElementById("studentEmail").value="";
+    document.getElementById("studentCourse").value="";
+
+    fetchStudents();
+}
+
+async function fetchStudents(){
+
+    const container = document.getElementById("studentContainer");
+    container.innerHTML = "";
+
+    const snapshot = await db.collection("students").get();
+
+    snapshot.forEach(doc=>{
+
+        const student = doc.data();
+
+        container.innerHTML += `
+        <div class="student-card">
+
+            <h3>${student.name}</h3>
+
+            <p><b>Email:</b> ${student.email}</p>
+
+            <p><b>Course:</b> ${student.course}</p>
+
+            <button class="edit-btn"
+            onclick="editStudent('${doc.id}')">
+            Edit
+            </button>
+
+            <button class="delete-btn"
+            onclick="deleteStudent('${doc.id}')">
+            Delete
+            </button>
+
+        </div>
+        `;
+    });
+}
+
+async function editStudent(id){
+
+    const name = prompt("Enter New Student Name");
+
+    if(!name) return;
+
+    await db.collection("students")
+    .doc(id)
+    .update({
+        name:name
+    });
+
+    fetchStudents();
+}
+
+async function deleteStudent(id){
+
+    if(!confirm("Delete Student?")) return;
+
+    await db.collection("students")
+    .doc(id)
+    .delete();
+
+    fetchStudents();
+}
+
+fetchStudents();
+
+</script>
+
+</body>
+</html>
